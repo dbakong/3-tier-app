@@ -1,17 +1,16 @@
 variable "aws_region" {
-  description = "The AWS region to create resources in."
+  description = "The AWS region to deploy to"
   type        = string
-  default     = "us-east-2"
 }
 
 variable "vpc_cidr" {
-  description = "The CIDR block for the VPC."
+  description = "The CIDR block for the VPC"
   type        = string
   default     = "10.0.0.0/16"
 }
 
 variable "local_ip_range" {
-  description = "The IP range to allow SSH access from."
+  description = "Your local IP range to allow SSH access"
   type        = string
 }
 
@@ -28,18 +27,18 @@ variable "db_username" {
 }
 
 variable "ami_id" {
-  description = "The ID of the AMI to use for the EC2 instance."
+  description = "The AMI ID to use for the instances"
   type        = string
   default     = "ami-01b64707e9d9b7350"
 }
 
 variable "instance_type" {
-  description = "The type of instance to use."
+  description = "The instance type to use for the instances"
   type        = string
   default     = "t2.micro"
 }
 
 variable "key_name" {
-  description = "The name of the key pair to use for the instance."
+  description = "The key name to use for the instances"
   type        = string
 }

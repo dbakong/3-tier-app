@@ -4,16 +4,10 @@ provider "aws" {
 
 provider "random" {}
 
-locals {
-  public_subnet_cidrs = [
-    cidrsubnet(var.vpc_cidr, 8, 1),
-    cidrsubnet(var.vpc_cidr, 8, 2)
-  ]
 
-  private_subnet_cidrs = [
-    cidrsubnet(var.vpc_cidr, 8, 3),
-    cidrsubnet(var.vpc_cidr, 8, 4)
-  ]
+locals {
+  public_subnet_cidrs  = [cidrsubnet(var.vpc_cidr, 8, 1)]
+  private_subnet_cidrs = [cidrsubnet(var.vpc_cidr, 8, 3), cidrsubnet(var.vpc_cidr, 8, 4)]
 }
 
 module "vpc" {
@@ -28,52 +22,9 @@ module "vpc" {
   private_subnets         = local.private_subnet_cidrs
   map_public_ip_on_launch = true
   enable_nat_gateway      = false
-}
 
-resource "aws_security_group" "web_sg" {
-  vpc_id      = module.vpc.vpc_id
-  name        = "web-sg"
-  description = "Allow web traffic and SSH access"
-
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.local_ip_range]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "db_sg" {
-  vpc_id      = module.vpc.vpc_id
-  name        = "db-sg"
-  description = "Allow database traffic"
-
-  ingress {
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = [module.vpc.vpc_cidr_block]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [module.vpc.vpc_cidr_block]
+  tags = {
+    project = "part-a"
   }
 }
 
@@ -86,11 +37,12 @@ module "rds" {
   source  = "terraform-aws-modules/rds/aws"
   version = "5.3.0"
 
-  identifier        = "demodb"
-  engine            = "mysql"
-  engine_version    = "8.0"
-  instance_class    = "db.t3.micro"
-  allocated_storage = 10
+  identifier            = "demodb"
+  engine                = "mysql"
+  engine_version        = "8.0"
+  instance_class        = "db.t3.micro"
+  allocated_storage     = 10
+  max_allocated_storage = 1024
 
   db_name  = var.db_name
   username = var.db_username
@@ -107,6 +59,10 @@ module "rds" {
   publicly_accessible       = false
   skip_final_snapshot       = true
   deletion_protection       = false
+
+  tags = {
+    project = "part-a"
+  }
 }
 
 resource "aws_instance" "web" {
@@ -118,7 +74,7 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
-    Name = "web-instance"
+    project = "part-a"
   }
 
   user_data = templatefile("${path.module}/user_data.sh.tpl", {
